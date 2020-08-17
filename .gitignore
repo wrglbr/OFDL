@@ -1,0 +1,9 @@
+/.vs
+/OFDL/Files
+/OFDL/onlyfans.sqlite3.db
+/OFDL/OFDL.pyproj
+/OFDL/OFDL.sln
+/OFDL/config.json
+/OFDL/icons/__pycache__
+/OFDL/module/__pycache__
+/OFDL/ui/__pycache__

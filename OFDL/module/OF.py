@@ -34,8 +34,7 @@ class Onlyfans:
         try:
             conn = sqlite3.connect('onlyfans.sqlite3.db', check_same_thread=False)
             c = conn.cursor()
-            c.execute("CREATE TABLE IF NOT EXISTS `entries`"
-                      "(`id`	TEXT, `url` TEXT, `userid` TEXT, `username` TEXT, `filename` TEXT);")
+            c.execute("CREATE TABLE IF NOT EXISTS `entries` (`id` TEXT, `url` TEXT, `userid` TEXT, `username` TEXT, `filename` TEXT);")
         except Error as e:
             print (e)
         return conn
@@ -164,7 +163,7 @@ class Onlyfans:
         self.all_files_size = 0
 
 
-    def get_links(self, info, flag, index):
+    def get_links(self, obj, info, flag, index):
         if info is None:
             return
         user_id = info["id"]
@@ -234,7 +233,8 @@ class Onlyfans:
                                             file_dict = {"source" : src, "size": file_size, "index" : index, "id": story_id,
                                                              "date" : date, "flag" : HIGHLIGHTS}
                                             highlights.append(file_dict)
-                                       
+                                            try: obj.Status.configure(text = ("Status: Collecting Highlights: " + str(len(highlights))))
+                                            except: print("Status: Collecting Highlights: " + str(len(highlights)) + "     ", end='\r')
 
         if flag & MESSAGES:
             js_message = []
@@ -288,6 +288,9 @@ class Onlyfans:
                                                      "date" : date, "flag" : MESSAGES}
                                         audio.append(file_dict)
 
+                                    try: obj.Status.configure(text = ("Status: Collecting Messages: " + str(len(images) + len(videos) + len(audio))))
+                                    except: print("Status: Collecting Messages: " + str(len(images) + len(videos) + len(audio)) + "     ", end='\r')
+
         if flag & PICTURES or flag & VIDEOS:
             json_data = []
             for n in offsets:
@@ -320,6 +323,8 @@ class Onlyfans:
                                 file_dict = {"source" : src, "size" : file_size, "index" : index, "id" : post_id,
                                              "date" : date, "flag" : STORIES}
                                 stories.append(file_dict)
+                                try: obj.Status.configure(text = ("Status: Collecting Stories: " + str(len(stories))))
+                                except: print("Status: Collecting Stories: " + str(len(stories)) + "     ", end='\r')
                             
                         
             
@@ -348,6 +353,8 @@ class Onlyfans:
                                         file_dict = {"source" : type_src, "size": file_size, "index" : index, "id": id_post,
                                              "date" : date, "flag" : PICTURES}
                                         images.append(file_dict)
+                                        try: obj.Status.configure(text = ("Status: Collecting Images: " + str(len(images))))
+                                        except: print("Status: Collecting Images: " + str(len(images)) + "     ", end='\r')
 
             
         if flag & VIDEOS:
@@ -376,6 +383,8 @@ class Onlyfans:
                                         file_dict = {"source" : type_src, "size": file_size, "index" : index, "id": id_post,
                                              "date" : date, "flag" : VIDEOS}
                                         videos.append(file_dict)
+                                        try: obj.Status.configure(text = ("Status: Collecting Videos: " + str(len(videos))))
+                                        except: print("Status: Collecting Videos: " + str(len(videos)) + "     ", end='\r')
 
         if flag & ARCHIVED:
              cnt = info["archivedPostsCount"]
@@ -417,6 +426,8 @@ class Onlyfans:
                                         file_dict = {"source" : type_src, "size": file_size, "index" : index, "id": id_post,
                                              "date" : date, "flag" : ARCHIVED}
                                         archived.append(file_dict)
+                                        try: obj.Status.configure(text = ("Status: Collecting Archived: " + str(len(archived))))
+                                        except: print("Status: Collecting Archived: " + str(len(archived)) + "     ", end='\r')
 
 
         if flag & AUDIO:
@@ -430,7 +441,7 @@ class Onlyfans:
                  self.create_sign(self.session, audio_api, self.get_sess(), self.user_agent)
                  r = self.session.get(audio_api)
                  js = json.loads(r.text)
-
+                 
                  for j in js:
                      if "postedAt" in j and "media" in j and "id" in j:
                          date = j["postedAt"]
@@ -449,24 +460,20 @@ class Onlyfans:
                                     file_dict = {"source" : type_src, "size": file_size, "index" : index, "id": id_post,
                                                  "date" : date, "flag" : AUDIO}
                                     audio.append(file_dict)
-                                 
-                         
-                 
-                                 
-                                     
-                
-            
-                            
+                                    try: obj.Status.configure(text = ("Status: Collecting Audio: " + str(len(audio))))
+                                    except: print("Status: Collecting Audio: " + str(len(audio)) + "     ", end='\r')
+        
         self.links += stories + highlights + images + videos + audio + archived
 
-        list_copy = self.links.copy()
+        if not obj.RedownloadBool.get():
+            list_copy = self.links.copy()
 
-        for link in list_copy:    
-            filename = link["source"].split('/')[-1]
-            filename = filename.split('?')[0]
-            if self.select_database(user_id, filename) == True:
-                self.links.remove(link)
-                self.all_files_size -= link["size"]
+            for link in list_copy:    
+                filename = link["source"].split('/')[-1]
+                filename = filename.split('?')[0]
+                if self.select_database(user_id, filename) == True:
+                    self.links.remove(link)
+                    self.all_files_size -= link["size"]
 
     def select_database(self, userid, filename):
         try:
@@ -488,8 +495,10 @@ class Onlyfans:
         File_Name = url.split('/')[-1]
         try:
             c = self.conn.cursor()
-            c.execute('INSERT INTO entries VALUES(?,?,?,?,?)', (str(post_id), str(url), str(id_user), str(username),
-                                                                  str(File_Name)))
+            c.execute('INSERT INTO entries(id, url, userid, username, filename) SELECT ?, ?, ?, ?, ?' 
+                      'WHERE NOT EXISTS(SELECT 1 FROM entries WHERE id = ? AND url = ? AND userid = ? AND username = ? AND filename = ?)',
+                      (str(post_id), str(url), str(id_user), str(username), str(File_Name),
+                       str(post_id), str(url), str(id_user), str(username), str(File_Name)))
             self.conn.commit()
         except sqlite3.IntegrityError:
             pass
@@ -520,11 +529,13 @@ class Onlyfans:
 
     def download(self, obj, folder, file):
         file_name = file["source"]
+        file_date = file["date"]
         flag = file["flag"]
         File_Extension = file_name.split('.')[-1]
         File_Extension = File_Extension.split('?')[0]
+        File_Date = file_date.split('T')[0]
         File_Name = file_name.split('/')[-1]
-        File_Name = File_Name.split('?')[0]
+        File_Name = File_Date + "_" + File_Name.split('?')[0]
         total_download = self.all_files_size
         directory = ""
 
@@ -541,11 +552,9 @@ class Onlyfans:
 
         self.create_dir(folder + "/" + directory)
 
-        
-
         if File_Extension == "jpg" or File_Extension == "jpeg" or File_Extension == "png":
             self.create_dir(folder + "/" + directory + "/Images")
-            if os.path.isfile("Files/" + folder + "/" + directory + "/Images/" + File_Name) == False:
+            if os.path.isfile("Files/" + folder + "/" + directory + "/Images/" + File_Name) == False or obj.RedownloadBool.get():
                 with open("Files/" + folder + "/" + directory + "/Images/" + File_Name, "wb") as file:
                     response = self.session.get(file_name, stream=True)
                     tmp = response.headers.get('content-length')
@@ -555,12 +564,13 @@ class Onlyfans:
                         total_length = int(tmp)
                         for data in response.iter_content(chunk_size=4096):
                             self.current_dl += len(data)
-                            obj.ProgressBar['value'] =  (self.current_dl / total_download) * 100
+                            try: obj.ProgressBar['value'] =  (self.current_dl / total_download) * 100
+                            except: pass
                             file.write(data)
                             
         elif File_Extension == "mp4":
             self.create_dir(folder + "/" + directory + "/Videos")
-            if os.path.isfile("Files/" + folder + "/" + directory + "/Videos/" + File_Name) == False:
+            if os.path.isfile("Files/" + folder + "/" + directory + "/Videos/" + File_Name) == False or obj.RedownloadBool.get():
                 with open("Files/" + folder + "/" + directory + "/Videos/" + File_Name, "wb") as file:
                     response = self.session.get(file_name, stream=True)
                     tmp = response.headers.get('content-length')
@@ -570,12 +580,13 @@ class Onlyfans:
                         total_length = int(tmp)
                         for data in response.iter_content(chunk_size=4096):
                             self.current_dl += len(data)
-                            obj.ProgressBar['value'] =  (self.current_dl / total_download) * 100
+                            try: obj.ProgressBar['value'] =  (self.current_dl / total_download) * 100
+                            except : pass
                             file.write(data)
                             
         elif File_Extension == "mp3":
             self.create_dir(folder + "/" + directory + "/Audio")
-            if os.path.isfile("Files/" + folder + "/" + directory + "/Audio/" + File_Name) == False:
+            if os.path.isfile("Files/" + folder + "/" + directory + "/Audio/" + File_Name) == False or obj.RedownloadBool.get():
                 with open("Files/" + folder + "/" + directory + "/Audio/" + File_Name, "wb") as file:
                     response = self.session.get(file_name, stream=True)
                     tmp = response.headers.get('content-length')
@@ -585,12 +596,13 @@ class Onlyfans:
                         total_length = int(tmp)
                         for data in response.iter_content(chunk_size=4096):
                             self.current_dl += len(data)
-                            obj.ProgressBar['value'] =  (self.current_dl / total_download) * 100
+                            try: obj.ProgressBar['value'] =  (self.current_dl / total_download) * 100
+                            except: pass
                             file.write(data)
                             
         else:
             self.create_dir(folder + "/" + directory + "/Misc")
-            if os.path.isfile("Files/" + folder + "/" + directory + "/Misc/" + File_Name) == False:
+            if os.path.isfile("Files/" + folder + "/" + directory + "/Misc/" + File_Name) == False or obj.RedownloadBool.get():
                 with open("Files/" + folder + "/" + directory + "/Misc/" + File_Name, "wb") as file:
                     response = self.session.get(file_name, stream=True)
                     tmp = response.headers.get('content-length')
@@ -600,7 +612,8 @@ class Onlyfans:
                         total_length = int(tmp)
                         for data in response.iter_content(chunk_size=4096):
                             self.current_dl += len(data)
-                            obj.ProgressBar['value'] =  (self.current_dl / total_download) * 100
+                            try: obj.ProgressBar['value'] =  (self.current_dl / total_download) * 100
+                            except: pass
                             file.write(data)
             
 
