@@ -120,30 +120,34 @@ class MainCommand:
             if 'Audio' in answers["mtypes"]:
                 self.Chosen_List[subname] += "Au"
 
+        print('\n')
+
         self.Main()
 
     def Main(self):
         choices = sorted(self.Sub_List)
-        choices.append('Retrieve Links')
-        message = "Select a subscription, 'Retrieve Links'"
+        message = "Select a subscription"
+        
+        if len(self.Chosen_List) > 0:
+            choices.append('Retrieve Links')
+            message += ", 'Retrieve Links'"
 
         if len(self.onlyfans.links) > 0:
             choices.append('Download Links')
             message += ", 'Download Links'"
 
-        
         if self.RedownloadBool.get():
             choices.append('Toggle Re-Download Off (Is On)')
         else:
             choices.append('Toggle Re-Download On (Is Off)')
         choices.append('Quit')
-        message = ", choose if you want to re-download files or 'Quit'"
+        message += ", choose if you want to re-download files or 'Quit'"
 
         questions = [
             {
                 'type': 'list',
                 'name': 'sub',
-                'message': '',
+                'message': message,
                 'choices': choices
             }
         ]
@@ -154,10 +158,16 @@ class MainCommand:
             ChosenString += "None"
         else:
             for key, value in self.Chosen_List.items():
-                ChosenString += str(key) + ": " + str(value)
+                if str(value) == "MPVHArAu":
+                    ChosenString += str(key) + ": All, "
+                else:
+                    ChosenString += str(key) + ": " + str(value) + ", "
+            ChosenString = ChosenString[:-2]
 
         print(ChosenString)
         answers = prompt(questions)
+
+        print('\n')
 
         if answers["sub"] == "Retrieve Links":
             self.Get_Links_T()
@@ -187,6 +197,9 @@ class MainCommand:
         self.Sub_List = self.onlyfans.return_active_subs()
 
         print("Loading finished.")
+
+        print('\n')
+
         self.Main()
 
 
@@ -242,9 +255,12 @@ class MainCommand:
         links = self.onlyfans.return_links()
         if len(links) > 0:
             print('\nStatus: Done.')
+            print('\n')
             self.Display_Info(links)
         else:
             print('\nStatus: Done. No downloadable links were found.')
+            print('\n')
+
         self.Main()
 
     def Display_Info(self, links):
@@ -265,11 +281,11 @@ class MainCommand:
                 type_file[String_Flag(flag)] += 1
             else:
                 user_name = self.onlyfans.subscript_array(current_user) + ": \n"
-                self.LogText.insert(tk.END, user_name)
+                infotext += user_name
                 for key, value in type_file.items():
-                    self.LogText.insert(tk.END, "   " + key + ": " + str(value) + "\n")
+                    infotext += "   " + key + ": " + str(value) + "\n"
                     type_file[key] = 0
-                self.LogText.insert(tk.END, "   Total size: " + File_Size_Str(user_size) + "\n")
+                infotext += "   Total size: " + File_Size_Str(user_size) + "\n"
                 
                 user_size = 0
                 file_count = 1
@@ -277,7 +293,7 @@ class MainCommand:
                 user_size += file["size"]
                 total_size += file["size"]
                 flag = file["flag"]
-                type_file[self.string_flag(flag)] += 1
+                type_file[String_Flag(flag)] += 1
 
         user_name = self.onlyfans.subscript_array(current_user) + ": \n"
         infotext += user_name
@@ -299,6 +315,7 @@ class MainCommand:
         files = []
         if len(self.onlyfans.return_links()) > 0:
             answer = prompt(questions)
+            print('\n')
             if answer["continue"] != False:
                 names = self.onlyfans.return_user_array().copy()
                 if self.sort == True:
@@ -329,9 +346,12 @@ class MainCommand:
                 print('\nStatus: Done.')
         else:
             print('\nStatus: Done.')
+        
+        print('\n')
         #os.remove("onlyfans.continue")
         self.onlyfans.clear_links()
         self.onlyfans.clear_array()
         self.onlyfans.clear_filter()
+        self.Chosen_List = {}
 
         self.Main()

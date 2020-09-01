@@ -167,6 +167,7 @@ class Onlyfans:
         if info is None:
             return
         user_id = info["id"]
+        user_name = info["username"]
         offsets = []
         images = []
         videos = []
@@ -194,7 +195,6 @@ class Onlyfans:
 
         highlight_api = "https://onlyfans.com/api2/v2/users/" + str(user_id) + \
                      "/stories/highlights?app-token=" + self.app_token
-
 
         audio_api = "https://onlyfans.com/api2/v2/users/" + str(user_id) + \
                     "/posts/audios?limit=10&offset=&order=publish_date_desc&app-token=" + self.app_token
@@ -233,8 +233,8 @@ class Onlyfans:
                                             file_dict = {"source" : src, "size": file_size, "index" : index, "id": story_id,
                                                              "date" : date, "flag" : HIGHLIGHTS}
                                             highlights.append(file_dict)
-                                            try: obj.Status.configure(text = ("Status: Collecting Highlights: " + str(len(highlights))))
-                                            except: print("Status: Collecting Highlights: " + str(len(highlights)) + "     ", end='\r')
+                                            try: obj.Status.configure(text = ("Status: Collecting Highlights of " + str(user_name) + ": " + str(len(highlights))))
+                                            except: print("Status: Collecting Highlights of " + str(user_name) + ": " + str(len(highlights)) + "     ", end='\r')
 
         if flag & MESSAGES:
             js_message = []
@@ -288,8 +288,8 @@ class Onlyfans:
                                                      "date" : date, "flag" : MESSAGES}
                                         audio.append(file_dict)
 
-                                    try: obj.Status.configure(text = ("Status: Collecting Messages: " + str(len(images) + len(videos) + len(audio))))
-                                    except: print("Status: Collecting Messages: " + str(len(images) + len(videos) + len(audio)) + "     ", end='\r')
+                                    try: obj.Status.configure(text = ("Status: Collecting Messages from " + str(user_name) + ": " + str(len(images) + len(videos) + len(audio))))
+                                    except: print("Status: Collecting Messages from " + str(user_name) + ": " + str(len(images) + len(videos) + len(audio)) + "     ", end='\r')
 
         if flag & PICTURES or flag & VIDEOS:
             json_data = []
@@ -323,8 +323,8 @@ class Onlyfans:
                                 file_dict = {"source" : src, "size" : file_size, "index" : index, "id" : post_id,
                                              "date" : date, "flag" : STORIES}
                                 stories.append(file_dict)
-                                try: obj.Status.configure(text = ("Status: Collecting Stories: " + str(len(stories))))
-                                except: print("Status: Collecting Stories: " + str(len(stories)) + "     ", end='\r')
+                                try: obj.Status.configure(text = ("Status: Collecting Stories of " + str(user_name) + ": " + str(len(stories))))
+                                except: print("Status: Collecting Stories of " + str(user_name) + ": " + str(len(stories)) + "     ", end='\r')
                             
                         
             
@@ -353,8 +353,8 @@ class Onlyfans:
                                         file_dict = {"source" : type_src, "size": file_size, "index" : index, "id": id_post,
                                              "date" : date, "flag" : PICTURES}
                                         images.append(file_dict)
-                                        try: obj.Status.configure(text = ("Status: Collecting Images: " + str(len(images))))
-                                        except: print("Status: Collecting Images: " + str(len(images)) + "     ", end='\r')
+                                        try: obj.Status.configure(text = ("Status: Collecting Pictures of " + str(user_name) + ": " + str(len(images))))
+                                        except: print("Status: Collecting Pictures of " + str(user_name) + ": " + str(len(images)) + "     ", end='\r')
 
             
         if flag & VIDEOS:
@@ -383,8 +383,8 @@ class Onlyfans:
                                         file_dict = {"source" : type_src, "size": file_size, "index" : index, "id": id_post,
                                              "date" : date, "flag" : VIDEOS}
                                         videos.append(file_dict)
-                                        try: obj.Status.configure(text = ("Status: Collecting Videos: " + str(len(videos))))
-                                        except: print("Status: Collecting Videos: " + str(len(videos)) + "     ", end='\r')
+                                        try: obj.Status.configure(text = ("Status: Collecting Videos of " + str(user_name) + ": " + str(len(videos))))
+                                        except: print("Status: Collecting Videos of " + str(user_name) + ": " + str(len(videos)) + "     ", end='\r')
 
         if flag & ARCHIVED:
              cnt = info["archivedPostsCount"]
@@ -426,8 +426,8 @@ class Onlyfans:
                                         file_dict = {"source" : type_src, "size": file_size, "index" : index, "id": id_post,
                                              "date" : date, "flag" : ARCHIVED}
                                         archived.append(file_dict)
-                                        try: obj.Status.configure(text = ("Status: Collecting Archived: " + str(len(archived))))
-                                        except: print("Status: Collecting Archived: " + str(len(archived)) + "     ", end='\r')
+                                        try: obj.Status.configure(text = ("Status: Collecting Archived of " + str(user_name) + ": " + str(len(archived))))
+                                        except: print("Status: Collecting Archived of " + str(user_name) + ": " + str(len(archived)) + "     ", end='\r')
 
 
         if flag & AUDIO:
@@ -460,8 +460,8 @@ class Onlyfans:
                                     file_dict = {"source" : type_src, "size": file_size, "index" : index, "id": id_post,
                                                  "date" : date, "flag" : AUDIO}
                                     audio.append(file_dict)
-                                    try: obj.Status.configure(text = ("Status: Collecting Audio: " + str(len(audio))))
-                                    except: print("Status: Collecting Audio: " + str(len(audio)) + "     ", end='\r')
+                                    try: obj.Status.configure(text = ("Status: Collecting Audio of " + str(user_name) + ": " + str(len(audio))))
+                                    except: print("Status: Collecting Audio of " + str(user_name) + ": " + str(len(audio)) + "     ", end='\r')
         
         self.links += stories + highlights + images + videos + audio + archived
 
