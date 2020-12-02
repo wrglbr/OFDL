@@ -8,7 +8,7 @@ import time as time2
 import hashlib
 from ratelimit import limits
 
-ONE_MINUTE = 60
+ONE_MINUTE = 320
 
 MESSAGES = 0b1000000
 PICTURES = 0b0100000
