@@ -31,7 +31,6 @@ class Onlyfans:
         self.filter_list = []
         self.session = requests.Session()
         self.conn = self.get_database()
-        add('onlyfans', Limit(second=2, minute=3))
 
     def get_database(self):
         conn = None
