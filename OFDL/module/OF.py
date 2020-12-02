@@ -6,7 +6,9 @@ import sqlite3
 from sqlite3 import Error
 import time as time2
 import hashlib
-from restraint import restrain, Limit, add
+from ratelimit import limits
+
+ONE_MINUTE = 60
 
 MESSAGES = 0b1000000
 PICTURES = 0b0100000
@@ -77,7 +79,7 @@ class Onlyfans:
         sess = sess[0:sess.find(";"):]
         return sess
     
-    @restrain('onlyfans')
+    @limits(calls=15, period=ONE_MINUTE)
     def get_subscriptions(self):
         if len(self.config) == 0:
             return
@@ -137,7 +139,7 @@ class Onlyfans:
     def return_all_subs(self):
         return self.all_subs
     
-    @restrain('onlyfans')
+    @limits(calls=15, period=ONE_MINUTE)
     def get_user_info(self, username):
         link = 'https://onlyfans.com/api2/v2/users/' + username + '&app-token=' + self.app_token
         return_dict = {}
@@ -165,7 +167,7 @@ class Onlyfans:
         self.current_dl = 0
         self.all_files_size = 0
 
-    @restrain('onlyfans')
+    @limits(calls=15, period=ONE_MINUTE)
     def get_links(self, obj, info, flag, index):
         if info is None:
             return
@@ -530,7 +532,7 @@ class Onlyfans:
         if len(self.filter_list) > 0:
             del self.filter_list[:]
             
-    @restrain('onlyfans')
+    @limits(calls=15, period=ONE_MINUTE)
     def download(self, obj, folder, file):
         file_name = file["source"]
         file_date = file["date"]
