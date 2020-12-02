@@ -6,9 +6,10 @@ import sqlite3
 from sqlite3 import Error
 import time as time2
 import hashlib
-from ratelimit import limits
+from ratelimit import limits, sleep_and_retry
 
-ONE_MINUTE = 320
+
+ONE_MINUTE = 60
 
 MESSAGES = 0b1000000
 PICTURES = 0b0100000
@@ -31,6 +32,7 @@ class Onlyfans:
         self.filter_list = []
         self.session = requests.Session()
         self.conn = self.get_database()
+        
 
     def get_database(self):
         conn = None
@@ -77,8 +79,9 @@ class Onlyfans:
         sess = sess[sess.find("sess=") + 5:]
         sess = sess[0:sess.find(";"):]
         return sess
-    
-    @limits(calls=15, period=ONE_MINUTE)
+
+    @sleep_and_retry
+    @limits(calls=60, period=ONE_MINUTE)
     def get_subscriptions(self):
         if len(self.config) == 0:
             return
@@ -137,7 +140,7 @@ class Onlyfans:
 
     def return_all_subs(self):
         return self.all_subs
-    
+    @sleep_and_retry
     @limits(calls=15, period=ONE_MINUTE)
     def get_user_info(self, username):
         link = 'https://onlyfans.com/api2/v2/users/' + username + '&app-token=' + self.app_token
@@ -165,8 +168,8 @@ class Onlyfans:
     def reset_download_size(self):
         self.current_dl = 0
         self.all_files_size = 0
-
-    @limits(calls=15, period=ONE_MINUTE)
+    @sleep_and_retry
+    @limits(calls=60, period=ONE_MINUTE)
     def get_links(self, obj, info, flag, index):
         if info is None:
             return
@@ -531,7 +534,7 @@ class Onlyfans:
         if len(self.filter_list) > 0:
             del self.filter_list[:]
             
-    @limits(calls=15, period=ONE_MINUTE)
+    @limits(calls=200, period=ONE_MINUTE)
     def download(self, obj, folder, file):
         file_name = file["source"]
         file_date = file["date"]
